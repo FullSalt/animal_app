@@ -100,7 +100,7 @@ def predicts():
                 if "image0.jpg" in os.listdir(file_path):
                     print('predected!')
                     break
-            image_path = os.path.join(parent_directory, 'runs/detect/predict/image0.jpg')
+            image_path = os.path.join(parent_directory, f'{file_path}/image0.jpg')
             image = Image.open(image_path).convert('RGB')
 
             original_width, original_height = image.size
