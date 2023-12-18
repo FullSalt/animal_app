@@ -1,32 +1,44 @@
 # 必要なモジュールのインポート
 import os
 import torch
-from animal import transform, Net #animal.pyから前処理とネットワークの定義を読み込み
+# from animal import transform, Net #animal.pyから前処理とネットワークの定義を読み込み
 
 from flask import Flask, render_template, request, redirect
 import io
 from PIL import Image
 import base64
+from ultralytics import YOLO
+from glob import glob
 
 # 学習済みモデルをもとに推論する
 def predict(img):
-    # ネットワークの準備
-    net = Net().cpu().eval()
+    # # ネットワークの準備
+    # net = Net().cpu().eval()
 
-    # py ファイルのディレクトリを取得
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    # py ファイルのディレクトリに基づく相対パスでファイルを指定
-    file_path = os.path.join(script_dir, 'dog_cat_weights_1CNN.pt')
+    # # py ファイルのディレクトリを取得
+    # script_dir = os.path.dirname(os.path.abspath(__file__))
+    # # py ファイルのディレクトリに基づく相対パスでファイルを指定
+    # file_path = os.path.join(script_dir, 'dog_cat_weights_1CNN.pt')
     
-    # 学習済みモデルの重み（dog_cat.pt）を読み込み
-    net.load_state_dict(torch.load(file_path, map_location=torch.device('cpu')))
-    #　データの前処理
-    img = transform(img)
-    # (batch_size, channel, height, width) の形式に変換
-    img =img.unsqueeze(0) # 1次元増やす
-    #　推論
-    y = torch.argmax(net(img), dim=1).cpu().detach().numpy()
+    # # 学習済みモデルの重み（dog_cat.pt）を読み込み
+    # net.load_state_dict(torch.load(file_path, map_location=torch.device('cpu')))
+    # #　データの前処理
+    # img = transform(img)
+    # # (batch_size, channel, height, width) の形式に変換
+    # img =img.unsqueeze(0) # 1次元増やす
+    # #　推論
+    # y = torch.argmax(net(img), dim=1).cpu().detach().numpy()
+
     return y
+
+def yolo_predict(img_path):
+    model_path = "best.pt"
+    model = YOLO(model_path)
+
+    model.predict(img_path, save=True)
+
+    return
+
 
 #　推論したラベルから犬か猫かを返す
 def getName(label):
@@ -62,10 +74,21 @@ def predicts():
         if file and allwed_file(file.filename):
 
             print(file)
+            print(file.filename)
+            yolo_predict(file.filename)
+
             #　画像ファイルに対する処理
             #　画像書き込み用バッファを確保
             buf = io.BytesIO()
-            image = Image.open(file).convert('RGB')
+            path_list = sorted(glob('runs/detect/*'))
+            file_path = path_list[-1]
+            print(file_path)
+            while True:
+                if file.filename in os.listdir(file_path):
+                    print('predected!')
+                    break
+            image_path = f'runs/detect/predict/{file.filename}'
+            image = Image.open(image_path).convert('RGB')
 
             # 画像の大きさを調整する
             # 講義資料にはなく、追加しています！
@@ -81,9 +104,9 @@ def predicts():
             base64_data = "data:image/png;base64,{}".format(base64_str)
 
             # 入力された画像に対して推論
-            pred = predict(image)
-            animalName_ = getName(pred)
-            return render_template('result.html', animalName=animalName_, img=base64_data)
+            # pred = predict(image)
+            # animalName_ = getName(pred)
+            return render_template('result.html', img=base64_data)
 
     # GET 　メソッドの定義
     elif request.method == 'GET':

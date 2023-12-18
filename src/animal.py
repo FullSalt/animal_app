@@ -7,29 +7,29 @@ import torch.nn.functional as F
 # from torchvision.models import resnet18 
 
 # 学習済みモデルに合わせた前処理を追加
-transform = transforms.Compose([
-    transforms.Resize(256),
-    transforms.CenterCrop(224),
-    transforms.ToTensor(),
-])
+# transform = transforms.Compose([
+#     transforms.Resize(256),
+#     transforms.CenterCrop(224),
+#     transforms.ToTensor(),
+# ])
 
 #　ネットワークの定義
-class Net(pl.LightningModule):
+# class Net(pl.LightningModule):
 
-    def __init__(self):
-        super().__init__()
-        self.conv = nn.Conv2d(in_channels=3, out_channels=3, kernel_size=3, padding=1)
-        self.bn = nn.BatchNorm2d(3)
-        self.fc = nn.Linear(37632, 2)
+#     def __init__(self):
+#         super().__init__()
+#         self.conv = nn.Conv2d(in_channels=3, out_channels=3, kernel_size=3, padding=1)
+#         self.bn = nn.BatchNorm2d(3)
+#         self.fc = nn.Linear(37632, 2)
 
-    def forward(self, x):
-        h = self.conv(x)
-        h = F.relu(h)
-        h = self.bn(h)
-        h = F.max_pool2d(h, kernel_size=2, stride=2)
-        h = h.view(-1, 37632)
-        h = self.fc(h)
-        return h
+#     def forward(self, x):
+#         h = self.conv(x)
+#         h = F.relu(h)
+#         h = self.bn(h)
+#         h = F.max_pool2d(h, kernel_size=2, stride=2)
+#         h = h.view(-1, 37632)
+#         h = self.fc(h)
+#         return h
 
 # ↓ 下記講義資料と同じ内容
 
@@ -56,3 +56,4 @@ class Net(pl.LightningModule):
 #         h = self.feature(x)
 #         h = self.fc(h)
 #         return h
+
