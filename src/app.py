@@ -1,14 +1,18 @@
 # 必要なモジュールのインポート
+import io
 import os
+import shutil
+import base64
+from glob import glob
+from natsort import natsorted
+import numpy as np
+from PIL import Image
+import cv2
 import torch
 # from animal import transform, Net #animal.pyから前処理とネットワークの定義を読み込み
+from ultralytics import YOLO
 
 from flask import Flask, render_template, request, redirect
-import io
-from PIL import Image
-import base64
-from ultralytics import YOLO
-from glob import glob
 
 # 学習済みモデルをもとに推論する
 def predict(img):
@@ -74,30 +78,38 @@ def predicts():
         if file and allwed_file(file.filename):
 
             print(file)
+            print(type(file))
             print(file.filename)
-            yolo_predict(file.filename)
+            PIL_image = Image.open(file.stream)
+            numpy_image = np.array(PIL_image)
+            numpy_image = cv2.cvtColor(numpy_image, cv2.COLOR_RGB2BGR)
+            yolo_predict(numpy_image)
 
             #　画像ファイルに対する処理
             #　画像書き込み用バッファを確保
             buf = io.BytesIO()
-            path_list = sorted(glob('runs/detect/*'))
+
+            path_list = natsorted(glob('runs/detect/*'))
             file_path = path_list[-1]
             print(file_path)
             while True:
-                if file.filename in os.listdir(file_path):
+                if "image0.jpg" in os.listdir(file_path):
                     print('predected!')
                     break
-            image_path = f'runs/detect/predict/{file.filename}'
+            image_path = 'runs/detect/predict/image0.jpg'
             image = Image.open(image_path).convert('RGB')
 
+            original_width, original_height = image.size
             # 画像の大きさを調整する
-            # 講義資料にはなく、追加しています！
+            # 新しい幅を設定（例: 500ピクセル）
             new_width = 500
-            new_height = 500
-            image = image.resize((new_width, new_height))
+            # アスペクト比を維持して新しい高さを計算
+            new_height = int(new_width * original_height / original_width)
+            # 新しいサイズでリサイズ
+            resized_image = image.resize((new_width, new_height))
 
             #　画像データをバッファに書き込む
-            image.save(buf, 'png')
+            resized_image.save(buf, 'png')
             #　バイナリデータをbase64でエンコードしてutf-8でデコード
             base64_str = base64.b64encode(buf.getvalue()).decode("utf-8")
             #　HTML側のsrcの記述に合わせるために付帯情報付与する
