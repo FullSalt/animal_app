@@ -14,6 +14,8 @@ from ultralytics import YOLO
 
 from flask import Flask, render_template, request, redirect
 
+parent_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
 # 学習済みモデルをもとに推論する
 def predict(img):
     # # ネットワークの準備
@@ -35,11 +37,11 @@ def predict(img):
 
     return y
 
-def yolo_predict(img_path):
-    model_path = "best.pt"
+def yolo_predict(image):
+    model_path = os.path.join(parent_directory, "best.pt")
     model = YOLO(model_path)
 
-    model.predict(img_path, save=True)
+    model.predict(image, save=True)
 
     return
 
@@ -77,7 +79,7 @@ def predicts():
         # ファイルのチェック
         if file and allwed_file(file.filename):
             
-            parent_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+            
             print(file)
             print(type(file))
             print(file.filename)
