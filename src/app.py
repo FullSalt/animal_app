@@ -76,7 +76,8 @@ def predicts():
         file = request.files['file']
         # ファイルのチェック
         if file and allwed_file(file.filename):
-
+            
+            parent_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
             print(file)
             print(type(file))
             print(file.filename)
@@ -88,15 +89,16 @@ def predicts():
             #　画像ファイルに対する処理
             #　画像書き込み用バッファを確保
             buf = io.BytesIO()
-
-            path_list = natsorted(glob('runs/detect/*'))
+            file_path = os.path.join(parent_directory, 'runs/detect/*')
+            print(file_path)
+            path_list = natsorted(glob(file_path))
             file_path = path_list[-1]
             print(file_path)
             while True:
                 if "image0.jpg" in os.listdir(file_path):
                     print('predected!')
                     break
-            image_path = 'runs/detect/predict/image0.jpg'
+            image_path = os.path.join(parent_directory, 'runs/detect/predict/image0.jpg')
             image = Image.open(image_path).convert('RGB')
 
             original_width, original_height = image.size
@@ -118,6 +120,13 @@ def predicts():
             # 入力された画像に対して推論
             # pred = predict(image)
             # animalName_ = getName(pred)
+            # フォルダが存在するか確認
+            file_path = os.path.join(parent_directory, 'runs')
+            if os.path.exists(file_path):
+                # フォルダとその中身を削除
+                shutil.rmtree(file_path)
+
+
             return render_template('result.html', img=base64_data)
 
     # GET 　メソッドの定義
